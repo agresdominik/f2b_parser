@@ -12,7 +12,8 @@ func main() {
 	//timedRun(parseLogsInJson)
 	//timedRun(analyseLogs)
 	//timedRun(analyseExtractedData)
-	timedRun(starter)
+	//timedRun(starter)
+	starter()
 }
 
 func timedRun(fn function) {
