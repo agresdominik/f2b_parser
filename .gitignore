@@ -1,0 +1,6 @@
+charts/
+test/
+bin/
+
+*.json
+*.log
