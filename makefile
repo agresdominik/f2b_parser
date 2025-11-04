@@ -1,5 +1,8 @@
 run:
 	go run ./src/.
 
-buid:
+build:
 	go build -o bin/parser ./src/.
+
+clean:
+	rm bin/*

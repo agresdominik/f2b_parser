@@ -8,11 +8,6 @@ import (
 type function func()
 
 func main() {
-
-	//timedRun(parseLogsInJson)
-	//timedRun(analyseLogs)
-	//timedRun(analyseExtractedData)
-	//timedRun(starter)
 	starter()
 }
 

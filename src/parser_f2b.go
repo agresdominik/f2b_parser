@@ -32,7 +32,8 @@ func parseFile(stateFilePath string, logFilePath string, destinationDirectory st
 	destinationFilePath := filepath.Join(destinationDirectory, "parsed.json")
 
 	// Load metadata
-	offset := checkState(stateFilePath).Offset
+	metadata := checkState(stateFilePath)
+	offset := metadata.Offset
 
 	// Check if the log file has rolled over
 	file, err := os.Open(logFilePath)
@@ -105,63 +106,20 @@ func parseFile(stateFilePath string, logFilePath string, destinationDirectory st
 	jsonData, err := json.MarshalIndent(logs, "", "   ")
 	_ = os.WriteFile(destinationFilePath, jsonData, 0644)
 
-	newOffset, _ := file.Seek(0, io.SeekCurrent)
-	newState := State{
-		Offset: newOffset,
-	}
-	updateState(stateFilePath, newState)
-}
-
-func parseLogsInJson() {
-
-	data, err := os.Open(LogFile)
+	// Get parsed log file size
+	logFile, err := os.Open(destinationFilePath)
 	if err != nil {
 		fmt.Printf("Error opening file: $%v", err)
 		return
 	}
-	defer data.Close()
+	defer logFile.Close()
+	stat, _ = logFile.Stat()
+	parsedLogfileSize := stat.Size()
 
-	logs := []Logs{}
-
-	const lenTimestamp = 23
-	dateRegex, _ := regexp.Compile(`\d{4}-\d{2}-\d{2}`)
-	handlerRegex, _ := regexp.Compile(`fail2ban\.\w+`)
-	ipRegex, _ := regexp.Compile(`(\b25[0-5]|\b2[0-4][0-9]|\b[01]?[0-9][0-9]?)(\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)){3}`)
-	levelRegex, _ := regexp.Compile(`\s*(?:[A-Z]+)\s+`)
-	serviceRegex, _ := regexp.Compile(`\s*(?:\[[a-z]+\])\s+`)
-	actionRegex, _ := regexp.Compile(`(Found|already banned|Ban|Unban)`)
-
-	scanner := bufio.NewScanner(data)
-	logEntry := Logs{}
-
-	for scanner.Scan() {
-		line := scanner.Text()
-
-		if len(line) < lenTimestamp {
-			continue
-		} else if !dateRegex.MatchString(line[:lenTimestamp]) {
-			continue
-		}
-
-		timestamp := line[:lenTimestamp]; timestamp = strings.TrimSpace(timestamp)
-		logString := line[lenTimestamp:]
-
-		ipAddress := strings.TrimSpace(ipRegex.FindString(logString))
-		handler := strings.TrimSpace(handlerRegex.FindString(logString))
-		level := strings.TrimSpace(levelRegex.FindString(logString))
-		service := strings.TrimSpace(serviceRegex.FindString(logString))
-		action := strings.TrimSpace(actionRegex.FindString(logString))
-
-		logEntry.IpAddress = ipAddress
-		logEntry.Timestamp = timestamp
-		logEntry.Handler = handler
-		logEntry.Level = level
-		logEntry.Source = service
-		logEntry.Message = action
-
-		logs = append(logs, logEntry)
+	newOffset, _ := file.Seek(0, io.SeekCurrent)
+	newState := State{
+		Offset: newOffset,
+		ParsedFileSize: parsedLogfileSize,
 	}
-
-	jsonData, err := json.MarshalIndent(logs, "", "   ")
-	err = os.WriteFile(ParsedJson, jsonData, 0644)
+	updateState(stateFilePath, newState)
 }

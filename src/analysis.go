@@ -7,12 +7,12 @@ import (
 )
 
 type StatsByIp struct {
-	IpAddress string	`json:"ipAddress"`
-	TotalLogs int `json:"totalLogs"`
-	TotalFound int `json:"totalFound"`
-	TotalBanned int `json:"totalBanned"`
-	TotalUnbanned int `json:"totalUnbanned"`
-	Country string `json:"county"`
+	IpAddress 		string	`json:"ipAddress"`
+	TotalLogs 		int 	`json:"totalLogs"`
+	TotalFound 		int 	`json:"totalFound"`
+	TotalBanned 	int 	`json:"totalBanned"`
+	TotalUnbanned 	int 	`json:"totalUnbanned"`
+	Country 		string 	`json:"county"`
 }
 
 func analyseLogs() {
@@ -72,7 +72,6 @@ func analyseLogs() {
 	err = os.WriteFile(StatsByIPFile, jsonData, 0644)
 
 }
-
 
 func analyseExtractedData() {
 

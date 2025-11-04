@@ -9,7 +9,8 @@ import (
 )
 
 type State struct {
-	Offset		int64 	`json:"offset"`
+	Offset			int64 	`json:"offset"`
+	ParsedFileSize	int64	`json:"size"`
 }
 
 func starter() {
@@ -20,7 +21,7 @@ func starter() {
 	flag.StringVar(source, "s", "", "Source Log File (shorthand)")
 
 	flag.Usage = func() {
-		fmt.Fprintf(os.Stderr, "Usage: %s --destDir <dir> --source <file>\n", os.Args[0])
+		fmt.Fprintf(os.Stderr, "Usage: %s --destDir=<dir> --source=<file>\n", os.Args[0])
 		flag.PrintDefaults()
 	}
 
@@ -31,15 +32,16 @@ func starter() {
 		os.Exit(1)
 	}
 
-	checkParameters(*destinationDirectory, *source)
+	stateFile := checkParameters(*destinationDirectory, *source)
+
+	parseFile(*stateFile, *source, *destinationDirectory)
 
 }
 
 /*
  * TODO: This function does not check read/write permissions yet
  */
-func checkParameters(destinationDirectory string, source string) {
-
+func checkParameters(destinationDirectory string, source string) (stateFilePath *string) {
 
 	if _, err := os.Stat(source); os.IsNotExist(err) {
 		fmt.Fprintf(os.Stderr, "Error: source file does not exist: %s\n", source)
@@ -66,7 +68,7 @@ func checkParameters(destinationDirectory string, source string) {
 		os.Exit(1)
 	}
 
-	parseFile(stateFile, source, destinationDirectory)
+	return &stateFile
 }
 
 func initState(destinationDirectory string) (stateFilePath string, err error) {
@@ -81,6 +83,7 @@ func initState(destinationDirectory string) (stateFilePath string, err error) {
 
 	state := State{
 		Offset: 0,
+		ParsedFileSize: 0,
 	}
 	data, err := json.MarshalIndent(state, "", "  ")
 	if err != nil {
